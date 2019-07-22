@@ -133,7 +133,6 @@ var PoseidonView = function (_Component) {
   {
     key: 'componentDidMount',
     value: function componentDidMount() {
-      console.log('componentDidMount');
 
       JitsiMeetJS.init();
       connection = new JitsiMeetJS.JitsiConnection(null, null, options);
@@ -166,7 +165,6 @@ var PoseidonView = function (_Component) {
             = devices.filter(d => d.kind === 'audiooutput');
 
           if (audioOutputDevices.length > 1) {
-            console.log('audioOutputDevices');
             // $('#audioOutputSelect').html(
             //   audioOutputDevices
             //     .map(
@@ -183,7 +181,6 @@ var PoseidonView = function (_Component) {
   {
     key: 'onLocalTracks',
     value: function onLocalTracks(tracks) {
-      console.log('local ');
       localTracks = tracks;
       for (let i = 0; i < localTracks.length; i++) {
         localTracks[i].addEventListener(
@@ -191,15 +188,13 @@ var PoseidonView = function (_Component) {
           audioLevel => { });
         localTracks[i].addEventListener(
           JitsiMeetJS.events.track.TRACK_MUTE_CHANGED,
-          () => console.log('local track muted'));
+          () => { });
         localTracks[i].addEventListener(
           JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED,
-          () => console.log('local track stoped'));
+          () => { });
         localTracks[i].addEventListener(
           JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED,
-          deviceId =>
-            console.log(
-              `track audio output device was changed to ${deviceId}`));
+          deviceId => { });
         if (localTracks[i].getType() === 'video') {
           let video = document.createElement("video");
           video.autoplay = true;
@@ -230,54 +225,44 @@ var PoseidonView = function (_Component) {
   {
     key: 'onConnectionSuccess',
     value: function onConnectionSuccess() {
-      console.error('onConnectionSuccess');
       var roomName = this.props.roomName;
       room = connection.initJitsiConference(roomName, confOptions);
       room.on(JitsiMeetJS.events.conference.TRACK_ADDED, (track) => this.onRemoteTrack(track));
-      room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, track => {
-        console.log(`track removed!!!${track}`);
-      });
+      room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, track => { });
       room.on(
         JitsiMeetJS.events.conference.CONFERENCE_JOINED,
         () => this.onConferenceJoined());
       room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
-        console.log('user join');
         remoteTracks[id] = [];
       });
-      room.on(JitsiMeetJS.events.conference.USER_LEFT, () => this.onUserLeft());
-      room.on(JitsiMeetJS.events.conference.TRACK_MUTE_CHANGED, track => {
-        console.log(`${track.getType()} - ${track.isMuted()}`);
-      });
+      room.on(JitsiMeetJS.events.conference.USER_LEFT, id => this.onUserLeft(id));
+      room.on(JitsiMeetJS.events.conference.TRACK_MUTE_CHANGED, track => { });
       room.on(
         JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED,
-        (userID, displayName) => console.log(`${userID} - ${displayName}`));
+        (userID, displayName) => { });
       room.on(
         JitsiMeetJS.events.conference.TRACK_AUDIO_LEVEL_CHANGED,
         (userID, audioLevel) => { });
       room.on(
         JitsiMeetJS.events.conference.PHONE_NUMBER_CHANGED,
-        () => console.log(`${room.getPhoneNumber()} - ${room.getPhonePin()}`));
+        () => { });
 
-      console.error('room join');
       room.join();
     }
   },
   {
     key: 'onConnectionFailed',
     value: function onConnectionFailed() {
-      console.error('Connection Failed!');
     }
   },
   {
     key: 'onDeviceListChanged',
     value: function onDeviceListChanged() {
-      console.info('current devices', devices);
     }
   },
   {
     key: 'disconnect',
     value: function disconnect() {
-      console.log('disconnect!');
       connection.removeEventListener(
         JitsiMeetJS.events.connection.CONNECTION_ESTABLISHED,
         () => this.onConnectionSuccess());
@@ -292,7 +277,6 @@ var PoseidonView = function (_Component) {
   {
     key: 'onConferenceJoined',
     value: function onConferenceJoined() {
-      console.error('conference joined! ' + localTracks.length);
       isJoined = true;
       for (let i = 0; i < localTracks.length; i++) {
         room.addTrack(localTracks[i]);
@@ -301,18 +285,19 @@ var PoseidonView = function (_Component) {
   },
   {
     key: 'onUserLeft',
-    value: function onUserLeft() {
-      console.log('user left');
+    value: function onUserLeft(id) {
       if (!remoteTracks[id]) {
         return;
       }
       const tracks = remoteTracks[id];
 
       for (let i = 0; i < tracks.length; i++) {
-        let att = document.getElementById(id + tracks[i].getType());
+        let att = document.getElementById(id + tracks[i].getType() + i);
+        console.log('remove id = ', (id + tracks[i].getType() + i));
+        
         tracks[i].detach(att);
 
-        this.node.removeChild(att);
+        this.node.parentNode.removeChild(att);
       }
     }
   },
@@ -324,13 +309,6 @@ var PoseidonView = function (_Component) {
       }
       const participant = track.getParticipantId();
 
-      let _parti = room.getParticipantById(participant);
-      let _partiName = _parti.getDisplayName();
-
-      if (!_partiName.includes('TEACHER')) {
-        return;
-      }
-
       if (!remoteTracks[participant]) {
         remoteTracks[participant] = [];
       }
@@ -341,16 +319,13 @@ var PoseidonView = function (_Component) {
         audioLevel => { });
       track.addEventListener(
         JitsiMeetJS.events.track.TRACK_MUTE_CHANGED,
-        () => console.log('remote track muted'));
+        () => { });
       track.addEventListener(
         JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED,
-        () => console.log('remote track stoped'));
+        () => { });
       track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED,
-        deviceId =>
-          console.log(
-            `track audio output device was changed to ${deviceId}`));
+        deviceId => { });
       const id = participant + track.getType() + idx;
-      console.error('id = ' + id);
 
       if (track.getType() === 'video') {
         let video = document.createElement("video");

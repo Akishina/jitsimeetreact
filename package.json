@@ -1,6 +1,6 @@
 {
   "name": "jitsimeetreact",
-  "version": "1.0.7",
+  "version": "1.1.7",
   "description": "",
   "author": "Akishina",
   "license": "MIT",
@@ -20,6 +20,13 @@
     "prop-types": "^15.5.4",
     "react": "^15.0.0 || ^16.0.0",
     "react-dom": "^15.0.0 || ^16.0.0"
+  },
+  "dependencies": {
+    "lodash": "^4.13.1",
+    "prop-types": "^15.5.10",
+    "react-display-name": "^0.2.0",
+    "scriptjs": "^2.5.8",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "@svgr/rollup": "^2.4.1",
